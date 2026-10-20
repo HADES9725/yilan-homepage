@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>奕澜-island | OPERATOR FILE</title>
+<style>
+  :root {
+    --bg: #070d0c;
+    --bg2: #0c1513;
+    --line: rgba(125, 232, 200, 0.16);
+    --mint: #7de8c8;
+    --teal: #14b8a6;
+    --cyan: #2dd4bf;
+    --text: #e6f2ee;
+    --muted: #6f8a82;
+    --panel: rgba(18, 32, 29, 0.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "PingFang SC", "Microsoft YaHei", -apple-system, sans-serif;
+    overflow-x: hidden;
+  }
+  .mono { font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace; }
+
+  /* 背景纹理 */
+  .bgfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .bg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(125,232,200,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(125,232,200,.04) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse 100% 80% at 70% 20%, #000 30%, transparent 100%);
+  }
+  .glow { position: absolute; border-radius: 50%; filter: blur(130px); }
+  .glow-a { width: 520px; height: 520px; top: -140px; right: -80px; background: rgba(20,184,166,.13); }
+  .glow-b { width: 400px; height: 400px; bottom: 10%; left: -140px; background: rgba(45,212,191,.08); }
+
+  .wrap { position: relative; z-index: 1; max-width: 1020px; margin: 0 auto; padding: 28px 22px 70px; }
+
+  /* 顶部状态条 */
+  .topbar {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: .68rem; letter-spacing: 2.5px; color: var(--muted);
+    border-bottom: 1px solid var(--line); padding-bottom: 14px; margin-bottom: 8px;
+  }
+  .topbar .ok { color: var(--mint); }
+  .topbar .ok::before { content: "● "; animation: blink 2.4s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+  /* ========== HERO ========== */
+  .hero {
+    position: relative; margin-top: 26px;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: linear-gradient(115deg, rgba(20,40,36,.55) 0%, rgba(10,18,16,.85) 55%, rgba(14,34,30,.4) 100%);
+    min-height: 480px;
+    clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+    overflow: hidden;
+  }
+  .hero-inner { display: flex; align-items: stretch; position: relative; z-index: 2; }
+  .hero-left { flex: 1.15; padding: 52px 0 46px 48px; position: relative; z-index: 4; }
+  .hero-right { flex: 1; position: relative; min-height: 480px; }
+
+  /* 角落标记 */
+  .corner { position: absolute; width: 14px; height: 14px; border-color: var(--mint); border-style: solid; opacity: .85; }
+  .c-tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+  .c-br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+  .hero .scan {
+    position: absolute; left: 0; right: 0; height: 90px; z-index: 3; pointer-events: none;
+    background: linear-gradient(180deg, transparent, rgba(125,232,200,.05), transparent);
+    animation: scan 7s linear infinite;
+  }
+  @keyframes scan { 0%{top:-15%} 100%{top:110%} }
+
+  .eyebrow { font-size: .7rem; letter-spacing: 5px; color: var(--teal); margin-bottom: 18px; }
+  .eyebrow b { color: var(--mint); }
+  h1 {
+    font-size: clamp(2.2rem, 5.4vw, 3.4rem); font-weight: 800; letter-spacing: 2px; line-height: 1.1;
+  }
+  h1 .en {
+    display: block; font-size: .42em; font-weight: 600; letter-spacing: 8px;
+    color: transparent; -webkit-text-stroke: 1px rgba(125,232,200,.55); margin-top: 8px;
+  }
+  .hero-bio { margin-top: 22px; color: var(--muted); line-height: 1.9; max-width: 400px; font-size: .95rem; }
+  .hero-bio em { color: var(--mint); font-style: normal; }
+
+  /* 角色数值条 */
+  .bars { margin-top: 30px; max-width: 380px; }
+  .bar-row { margin-bottom: 13px; }
+  .bar-row .lbl { display: flex; justify-content: space-between; font-size: .68rem; letter-spacing: 2px; color: var(--muted); margin-bottom: 5px; }
+  .bar-row .lbl b { color: var(--text); }
+  .bar { height: 5px; background: rgba(125,232,200,.09); position: relative; }
+  .bar i {
+    position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--teal), var(--mint));
+    width: 0; animation: fill 1.4s cubic-bezier(.2,.8,.2,1) forwards;
+  }
+  .bar i::after { content: ""; position: absolute; right: -2px; top: -3px; bottom: -3px; width: 3px; background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+  @keyframes fill { to { width: var(--w); } }
+  .d1 i { animation-delay: .3s } .d2 i { animation-delay: .45s } .d3 i { animation-delay: .6s }
+
+  /* 兽装立绘 */
+  .hero-right img.cutout {
+    position: absolute; bottom: 0; right: 0;
+    height: 100%; width: auto; max-width: none;
+    filter: drop-shadow(0 0 40px rgba(20,184,166,.35)) drop-shadow(0 20px 30px rgba(0,0,0,.5));
+    animation: float 5.5s ease-in-out infinite;
+    user-select: none; pointer-events: none;
+  }
+  /* 立绘左侧渐隐，保证文字可读 */
+  .hero-right::before {
+    content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+    background: linear-gradient(90deg, rgba(10,18,16,.95) 0%, rgba(10,18,16,.5) 30%, transparent 60%);
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+  .hero-right .hex {
+    position: absolute; right: 26px; top: 30px; font-size: .62rem; letter-spacing: 3px;
+    color: var(--teal); opacity: .8; writing-mode: vertical-rl;
+  }
+
+  /* ========== 通用 Section ========== */
+  .sec-head {
+    display: flex; align-items: baseline; gap: 16px; margin: 54px 0 18px;
+  }
+  .sec-head .no { font-size: 1.5rem; font-weight: 800; color: transparent; -webkit-text-stroke: 1px rgba(125,232,200,.5); letter-spacing: 1px; }
+  .sec-head .tt { font-size: 1rem; letter-spacing: 5px; font-weight: 700; }
+  .sec-head .sub { font-size: .66rem; letter-spacing: 3px; color: var(--muted); margin-left: auto; }
+  .sec-head::after { content: ""; flex: 1; height: 1px; align-self: center; background: linear-gradient(90deg, var(--line), transparent); }
+
+  /* 档案卡 */
+  .dossier {
+    border: 1px solid var(--line); background: var(--panel); backdrop-filter: blur(10px);
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+    padding: 30px 34px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px;
+    position: relative;
+  }
+  .cell .k { font-size: .64rem; letter-spacing: 3px; color: var(--muted); margin-bottom: 7px; }
+  .cell .v { font-size: 1.02rem; font-weight: 600; }
+  .cell .v.mint { color: var(--mint); }
+  .dossier .conf {
+    position: absolute; top: 12px; right: 34px; font-size: .58rem; letter-spacing: 3px;
+    color: rgba(125,232,200,.4); border: 1px solid rgba(125,232,200,.25); padding: 3px 8px;
+  }
+
+  /* 数据卡 */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat {
+    border: 1px solid var(--line); background: var(--panel); padding: 20px 18px;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+    transition: .3s;
+  }
+  .stat:hover { border-color: rgba(125,232,200,.5); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(20,184,166,.12); }
+  .stat b { font-size: 1.7rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stat b::after { content: "+"; color: var(--mint); font-size: .9rem; margin-left: 2px; }
+  .stat span { display: block; margin-top: 4px; font-size: .66rem; letter-spacing: 2.5px; color: var(--muted); }
+
+  /* 链接 */
+  .links { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .link-card {
+    display: flex; align-items: center; gap: 16px; padding: 20px 22px;
+    border: 1px solid var(--line); background: var(--panel); text-decoration: none; color: var(--text);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+    position: relative; overflow: hidden; transition: .3s;
+  }
+  .link-card::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--teal), var(--mint)); opacity: 0; transition: .3s;
+  }
+  .link-card:hover { transform: translateY(-3px); border-color: rgba(125,232,200,.5); background: rgba(20,40,36,.75); }
+  .link-card:hover::before { opacity: 1; }
+  .icon { width: 44px; height: 44px; display: grid; place-items: center; font-size: 1.25rem; border: 1px solid var(--line); flex-shrink: 0; }
+  .link-card b { display: block; font-size: .95rem; letter-spacing: 1px; }
+  .link-card small { color: var(--muted); font-size: .74rem; }
+  .arrow { margin-left: auto; color: var(--muted); transition: .3s; }
+  .link-card:hover .arrow { color: var(--mint); transform: translateX(5px); }
+
+  /* 配料表 */
+  .ingredients {
+    border: 1px dashed rgba(125,232,200,.3); background: rgba(20,40,36,.35);
+    padding: 24px 28px; line-height: 2.1; color: var(--muted); font-size: .9rem;
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+  }
+  .ingredients b { color: var(--mint); letter-spacing: 2px; }
+  .ingredients .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    font-size: .72rem; padding: 4px 12px; letter-spacing: 1px;
+    border: 1px solid var(--line); color: var(--text); background: rgba(125,232,200,.05);
+  }
+
+  footer {
+    margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between; font-size: .64rem; letter-spacing: 2.5px; color: var(--muted);
+  }
+  footer .mint { color: var(--mint); }
+
+  /* 入场 */
+  .reveal { opacity: 0; transform: translateY(22px); animation: rise .8s ease forwards; }
+  .r1{animation-delay:.05s}.r2{animation-delay:.2s}.r3{animation-delay:.35s}.r4{animation-delay:.5s}
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  @media (max-width: 760px) {
+    .hero-inner { flex-direction: column-reverse; }
+    .hero-left { padding: 0 30px 36px; }
+    .hero-right { min-height: 340px; }
+    .hero-right img.cutout { height: 92%; right: -6px; }
+    .dossier, .stats { grid-template-columns: 1fr 1fr; }
+    .links { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="bgfx"><div class="bg-grid"></div><div class="glow glow-a"></div><div class="glow glow-b"></div></div>
+
+  <div class="wrap">
+    <!-- 顶栏 -->
+    <div class="topbar mono reveal r1">
+      <span>OPERATOR FILE // 1002135566</span>
+      <span class="ok">ACCESS GRANTED</span>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero reveal r1">
+      <div class="scan"></div>
+      <div class="corner c-tl"></div><div class="corner c-br"></div>
+      <div class="hero-inner">
+        <div class="hero-left">
+          <div class="eyebrow mono">SEC.00 / <b>OPERATOR PROFILE</b></div>
+          <h1>奕 澜<span class="en mono">YI LAN · ISLAND</span></h1>
+          <p class="hero-bio">你好，这里是奕澜~<br>一只混迹于<em>科技数码</em>领域的<em>狼龙</em>，出没于各大展会现场。</p>
+          <div class="bars mono">
+            <div class="bar-row d1"><div class="lbl"><span>🐉 DRAGON / 龙</span><b>65%</b></div><div class="bar"><i style="--w:65%"></i></div></div>
+            <div class="bar-row d2"><div class="lbl"><span>🐺 WOLF / 狼</span><b>30%</b></div><div class="bar"><i style="--w:30%"></i></div></div>
+            <div class="bar-row d3"><div class="lbl"><span>💾 DIGITAL / 数码</span><b>90%</b></div><div class="bar"><i style="--w:90%"></i></div></div>
+          </div>
+        </div>
+        <div class="hero-right">
+          <span class="hex mono">WOLF-DRAGON UNIT // MINT SERIES</span>
+          <img class="cutout" src="fur2_s.png" alt="奕澜 兽装立绘">
+        </div>
+      </div>
+    </section>
+
+    <!-- 档案 -->
+    <div class="sec-head reveal r2"><span class="no mono">01</span><span class="tt">个人档案</span><span class="sub mono">PERSONAL RECORD</span></div>
+    <div class="dossier mono reveal r2">
+      <span class="conf">CONFIDENTIAL</span>
+      <div class="cell"><div class="k">RACE / 种族</div><div class="v mint">狼龙 · 混血</div></div>
+      <div class="cell"><div class="k">FAVOR / 爱好</div><div class="v">科技数码 · Furry</div></div>
+      <div class="cell"><div class="k">UNIT / 阵营</div><div class="v">FURRY 兽圈</div></div>
+      <div class="cell"><div class="k">STATUS / 状态</div><div class="v mint">在线营业中</div></div>
+    </div>
+
+    <!-- 数据 -->
+    <div class="sec-head reveal r2"><span class="no mono">02</span><span class="tt">作战数据</span><span class="sub mono">COMBAT DATA</span></div>
+    <div class="stats reveal r2">
+      <div class="stat"><b>3106</b><span>B站粉丝</span></div>
+      <div class="stat"><b>194</b><span>关注</span></div>
+      <div class="stat"><b>4</b><span>等级</span></div>
+      <div class="stat"><b>20</b><span>作品</span></div>
+    </div>
+
+    <!-- 通讯 -->
+    <div class="sec-head reveal r3"><span class="no mono">03</span><span class="tt">通讯频道</span><span class="sub mono">COMMUNICATION</span></div>
+    <div class="links reveal r3">
+      <a class="link-card" href="https://space.bilibili.com/1002135566" target="_blank" rel="noopener">
+        <div class="icon">📺</div>
+        <div><b>哔哩哔哩</b><small class="mono">UID 1002135566 · 视频/动态</small></div>
+        <span class="arrow">→</span>
+      </a>
+      <a class="link-card" href="https://v.douyin.com/02QxEhkdN4Q/" target="_blank" rel="noopener">
+        <div class="icon">🎵</div>
+        <div><b>抖音</b><small class="mono">奕澜-island · 扩列私信</small></div>
+        <span class="arrow">→</span>
+      </a>
+    </div>
+
+    <!-- 配料表 -->
+    <div class="sec-head reveal r4"><span class="no mono">04</span><span class="tt">配料表</span><span class="sub mono">INGREDIENTS</span></div>
+    <div class="ingredients reveal r4">
+      <b>⚠ 配料表公示</b>
+      <div class="chips">
+        <span class="chip">🦊 福瑞控</span>
+        <span class="chip">🍟 麦门</span>
+        <span class="chip">💾 数码佬</span>
+        <span class="chip">🍟 薯条</span>
+        <span class="chip">🍗 麦乐鸡</span>
+        <span class="chip">🍖 麦麦脆汁鸡</span>
+        <span class="chip">🍔 巨无霸</span>
+        <span class="chip">🍦 麦旋风</span>
+      </div>
+      扩列互关请私信 · 说话请自重。
+    </div>
+
+    <footer class="mono reveal r4">
+      <span>YILAN-ISLAND <span class="mint">//</span> WOLF-DRAGON UNIT</span>
+      <span>MINT SERIES · FILE 1002135566</span>
+    </footer>
+  </div>
+</body>
+</html>
